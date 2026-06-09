@@ -1,0 +1,21 @@
+require 'sinatra'
+
+before '/articles/:id' do
+  @article = Article.find(params[:id])
+  
+  # 当查找不到文章时，立即中断请求并返回 404 及错误信息
+  halt 404, "Article not found" if @article.nil?
+end
+
+get '/articles/:id' do
+  # @article 已经可用，且保证不为 nil
+  # 继续原有的查询/渲染逻辑
+end
+
+put '/articles/:id' do
+  # 继续原有的更新逻辑
+end
+
+delete '/articles/:id' do
+  # 继续原有的删除逻辑
+end
