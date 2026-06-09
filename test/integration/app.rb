@@ -76,42 +76,4 @@ end
 
 use Subclass
 
-get '/logs' do
-  content_type :html
-  <<-HTML
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Log Viewer</title>
-</head>
-<body>
-  <h1>Server Time Log</h1>
-  <div id="logs"></div>
-  <script>
-    const evtSource = new EventSource('/logs/stream');
-    const logsDiv = document.getElementById('logs');
-    evtSource.onmessage = function(e) {
-      const data = JSON.parse(e.data);
-      const p = document.createElement('p');
-      p.textContent = data.time;
-      logsDiv.appendChild(p);
-    };
-  </script>
-</body>
-</html>
-  HTML
-end
-
-get '/logs/stream' do
-  content_type 'text/event-stream'
-  cache_control 'no-cache'
-  stream(:keep_open) do |out|
-    while !out.closed?
-      current_time = Time.now.strftime('%Y-%m-%d %H:%M:%S')
-      out << "data: {\"time\":\"#{current_time}\"}\n\n"
-      sleep 1
-    end
-  end
-end
-
 $stderr.puts "starting"
