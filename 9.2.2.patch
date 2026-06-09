@@ -1,0 +1,53 @@
+diff --git a/app.rb b/app.rb
+new file mode 100644
+index 00000000..06a940a0
+--- /dev/null
++++ b/app.rb
+@@ -0,0 +1,47 @@
++require 'sinatra'
++
++MAX_FILE_SIZE = 10 * 1024 * 1024
++UPLOADS_DIR = File.expand_path('uploads', __dir__)
++
++get '/' do
++  'Basic GET request handled successfully.'
++end
++
++post '/' do
++  'Basic POST request handled successfully.'
++end
++
++post '/upload' do
++  uploaded_file = params[:file]
++
++  halt 400, 'Upload directory is not available.' unless Dir.exist?(UPLOADS_DIR)
++  halt 400, 'No file uploaded.' unless uploaded_file && uploaded_file[:tempfile] && uploaded_file[:filename]
++
++  tempfile = uploaded_file[:tempfile]
++  tempfile.rewind
++
++  halt 400, 'File size must not exceed 10MB.' if tempfile.size > MAX_FILE_SIZE
++
++  filename = File.basename(uploaded_file[:filename].to_s)
++  halt 400, 'Invalid filename.' if filename.empty?
++
++  destination_path = File.join(UPLOADS_DIR, filename)
++  tempfile.rewind
++
++  File.open(destination_path, 'wb') do |file|
++    IO.copy_stream(tempfile, file)
++  end
++
++  status 201
++  "File uploaded successfully: #{filename}"
++end
++
++get '/download/:filename' do
++  filename = File.basename(params[:filename].to_s)
++  halt 400, 'Invalid filename.' if filename.empty?
++
++  file_path = File.join(UPLOADS_DIR, filename)
++  halt 404, 'File not found.' unless File.file?(file_path)
++
++  send_file file_path, filename: filename, disposition: :attachment
++end
