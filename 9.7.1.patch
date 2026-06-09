@@ -1,0 +1,76 @@
+diff --git a/admin_app.rb b/admin_app.rb
+new file mode 100644
+index 00000000..0707d750
+--- /dev/null
++++ b/admin_app.rb
+@@ -0,0 +1,11 @@
++require 'sinatra/base'
++
++class AdminApp < Sinatra::Base
++  get '/' do
++    'Admin Dashboard'
++  end
++
++  get '/users' do
++    'Admin Users List'
++  end
++end
+diff --git a/api_app.rb b/api_app.rb
+new file mode 100644
+index 00000000..b397a7c1
+--- /dev/null
++++ b/api_app.rb
+@@ -0,0 +1,11 @@
++require 'sinatra/base'
++
++class ApiApp < Sinatra::Base
++  get '/' do
++    'API Root'
++  end
++
++  get '/version' do
++    '{"version": "1.0"}'
++  end
++end
+diff --git a/config.ru b/config.ru
+new file mode 100644
+index 00000000..0ee11ea7
+--- /dev/null
++++ b/config.ru
+@@ -0,0 +1,36 @@
++require 'rack'
++require 'rack/logger'
++require_relative 'admin_app'
++require_relative 'api_app'
++
++log_path = File.expand_path('log/app.log', __dir__)
++FileUtils.mkdir_p(File.dirname(log_path))
++log_file = File.open(log_path, 'a')
++log_file.sync = true
++
++use Rack::Logger, nil, log_file
++
++class RequestLoggingMiddleware
++  def initialize(app, logger)
++    @app = app
++    @logger = logger
++  end
++
++  def call(env)
++    method = env['REQUEST_METHOD']
++    path = env['PATH_INFO']
++    status, headers, body = @app.call(env)
++    @logger.info "#{method} #{path} - #{status}"
++    [status, headers, body]
++  end
++end
++
++use RequestLoggingMiddleware, Logger.new(log_file)
++
++map '/admin' do
++  run AdminApp.new
++end
++
++map '/api' do
++  run ApiApp.new
++end
