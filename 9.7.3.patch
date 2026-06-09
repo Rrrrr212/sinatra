@@ -1,0 +1,72 @@
+diff --git a/admin_app.rb b/admin_app.rb
+new file mode 100644
+index 00000000..9a945240
+--- /dev/null
++++ b/admin_app.rb
+@@ -0,0 +1,7 @@
++require 'sinatra/base'
++
++class AdminApp < Sinatra::Base
++  get '/' do
++    'Admin App'
++  end
++end
+diff --git a/api_app.rb b/api_app.rb
+new file mode 100644
+index 00000000..aa0bfc0f
+--- /dev/null
++++ b/api_app.rb
+@@ -0,0 +1,7 @@
++require 'sinatra/base'
++
++class ApiApp < Sinatra::Base
++  get '/' do
++    'Api App'
++  end
++end
+diff --git a/config.ru b/config.ru
+new file mode 100644
+index 00000000..f7aca807
+--- /dev/null
++++ b/config.ru
+@@ -0,0 +1,20 @@
++require 'logger'
++require_relative 'admin_app'
++require_relative 'api_app'
++
++log_file = File.new("requests.log", "a+")
++log_file.sync = true
++
++# 添加 Rack::Logger 中间件
++use Rack::Logger, Logger::INFO
++
++# 记录 HTTP 方法、路径和响应状态码到日志文件
++use Rack::CommonLogger, log_file
++
++map '/admin' do
++  run AdminApp
++end
++
++map '/api' do
++  run ApiApp
++end
+diff --git a/test_logger.rb b/test_logger.rb
+new file mode 100644
+index 00000000..f973e865
+--- /dev/null
++++ b/test_logger.rb
+@@ -0,0 +1,14 @@
++require 'rack'
++require 'logger'
++
++app = proc do |env|
++  env['rack.logger'].info "Something"
++  [200, {'Content-Type' => 'text/plain'}, ["Hello"]]
++end
++
++builder = Rack::Builder.new do
++  use Rack::Logger
++  run app
++end
++
++puts "Done"
