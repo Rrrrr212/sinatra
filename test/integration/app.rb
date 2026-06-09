@@ -49,33 +49,6 @@ get '/send_file' do
   send_file file
 end
 
-MAX_FILE_SIZE = 10 * 1024 * 1024
-
-post '/upload' do
-  unless params[:file] && params[:file][:tempfile]
-    halt 400, 'No file provided'
-  end
-
-  file = params[:file]
-  if file[:tempfile].size > MAX_FILE_SIZE
-    halt 400, 'File size exceeds 10MB limit'
-  end
-
-  filename = file[:filename]
-  upload_dir = File.expand_path('../../uploads', __dir__)
-  File.open(File.join(upload_dir, filename), 'wb') do |f|
-    f.write(file[:tempfile].read)
-  end
-
-  "File uploaded successfully: #{filename}"
-end
-
-get '/download/:filename' do
-  filepath = File.join(File.expand_path('../../uploads', __dir__), params[:filename])
-  halt 404, 'File not found' unless File.exist?(filepath)
-  send_file filepath, disposition: 'attachment', filename: params[:filename]
-end
-
 get '/streaming' do
   headers['Content-Length'] = '46'
   stream do |out|
