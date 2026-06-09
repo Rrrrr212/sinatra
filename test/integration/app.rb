@@ -3,26 +3,11 @@ require 'sinatra'
 
 configure do
   set :foo, :bar
-  enable :sessions
-end
-
-helpers do
-  def authenticate!
-    halt 401, 'Unauthorized' unless session[:user_id]
-  end
-end
-
-before '/protected/*' do
-  authenticate!
 end
 
 get '/app_file' do
   content_type :txt
   settings.app_file
-end
-
-get '/protected/any_path' do
-  'Protected content'
 end
 
 get '/ping' do
