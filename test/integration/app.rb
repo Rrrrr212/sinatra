@@ -23,6 +23,22 @@ get '/stream' do
   end
 end
 
+get '/logs/stream', :provides => 'text/event-stream' do
+  content_type 'text/event-stream'
+
+  stream(:keep_open) do |out|
+    if out.closed?
+      out.close unless out.closed?
+      next
+    end
+
+    out << %(data: {"time":"#{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"}\n\n)
+    sleep 1
+  rescue IOError, Errno::EPIPE
+    out.close unless out.closed?
+  end
+end
+
 get '/mainonly' do
   object = Object.new
   begin

@@ -1,5 +1,6 @@
 require_relative 'test_helper'
 require File.expand_path('integration_helper', __dir__)
+require 'net/http'
 
 # These tests start a real server and talk to it over TCP.
 # Every test runs with every detected server.
@@ -39,6 +40,32 @@ class IntegrationTest < Minitest::Test
     int2 = (times[2] - times[1]).round 2
     assert_operator 1, :>, int1
     assert_operator 1, :<, int2
+  end
+
+  it 'streams server time over sse' do
+    next if server.webrick? or server.trinidad?
+
+    response = nil
+    chunk = nil
+
+    assert_raises EOFError do
+      Net::HTTP.start '127.0.0.1', server.port do |http|
+        request = Net::HTTP::Get.new '/logs/stream'
+        request['Accept'] = 'text/event-stream'
+
+        http.request request do |res|
+          response = res
+          res.read_body do |part|
+            next if part.empty?
+            chunk = part
+            raise EOFError
+          end
+        end
+      end
+    end
+
+    assert_equal 'text/event-stream;charset=utf-8', response['Content-Type']
+    assert_match %r{\Adata: \{"time":"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"\}\n\n\z}, chunk
   end
 
   it 'starts the correct server' do
