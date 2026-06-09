@@ -1,0 +1,71 @@
+diff --git a/test/integration/app.rb b/test/integration/app.rb
+index f7e75cc8..3731b5b7 100644
+--- a/test/integration/app.rb
++++ b/test/integration/app.rb
+@@ -23,6 +23,22 @@ get '/stream' do
+   end
+ end
+ 
++get '/logs/stream', :provides => 'text/event-stream' do
++  content_type 'text/event-stream'
++
++  stream(:keep_open) do |out|
++    if out.closed?
++      out.close unless out.closed?
++      next
++    end
++
++    out << %(data: {"time":"#{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"}\n\n)
++    sleep 1
++  rescue IOError, Errno::EPIPE
++    out.close unless out.closed?
++  end
++end
++
+ get '/mainonly' do
+   object = Object.new
+   begin
+diff --git a/test/integration_test.rb b/test/integration_test.rb
+index 167e3bf8..e0060b14 100644
+--- a/test/integration_test.rb
++++ b/test/integration_test.rb
+@@ -1,5 +1,6 @@
+ require_relative 'test_helper'
+ require File.expand_path('integration_helper', __dir__)
++require 'net/http'
+ 
+ # These tests start a real server and talk to it over TCP.
+ # Every test runs with every detected server.
+@@ -41,6 +42,32 @@ class IntegrationTest < Minitest::Test
+     assert_operator 1, :<, int2
+   end
+ 
++  it 'streams server time over sse' do
++    next if server.webrick? or server.trinidad?
++
++    response = nil
++    chunk = nil
++
++    assert_raises EOFError do
++      Net::HTTP.start '127.0.0.1', server.port do |http|
++        request = Net::HTTP::Get.new '/logs/stream'
++        request['Accept'] = 'text/event-stream'
++
++        http.request request do |res|
++          response = res
++          res.read_body do |part|
++            next if part.empty?
++            chunk = part
++            raise EOFError
++          end
++        end
++      end
++    end
++
++    assert_equal 'text/event-stream;charset=utf-8', response['Content-Type']
++    assert_match %r{\Adata: \{"time":"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"\}\n\n\z}, chunk
++  end
++
+   it 'starts the correct server' do
+     exp = %r{
+       ==\sSinatra\s\(v#{Sinatra::VERSION}\)\s
