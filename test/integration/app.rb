@@ -76,10 +76,4 @@ end
 
 use Subclass
 
-helpers do
-  def authenticate!
-    halt 401, 'Unauthorized' unless session[:user_id]
-  end
-end
-
 $stderr.puts "starting"

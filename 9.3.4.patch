@@ -1,0 +1,15 @@
+diff --git a/test/integration/app.rb b/test/integration/app.rb
+index f7e75cc8..9c8a77b7 100644
+--- a/test/integration/app.rb
++++ b/test/integration/app.rb
+@@ -76,4 +76,10 @@ end
+ 
+ use Subclass
+ 
++helpers do
++  def authenticate!
++    halt 401, 'Unauthorized' unless session[:user_id]
++  end
++end
++
+ $stderr.puts "starting"
