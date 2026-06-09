@@ -1,0 +1,30 @@
+require 'sinatra'
+
+class Article
+  def self.find(id)
+    # Simulated database lookup
+    # Returns nil if not found
+    { id: id, title: "Article #{id}", content: "Content of article #{id}" }
+  end
+end
+
+before '/articles/:id' do
+  @article = Article.find(params[:id])
+  halt 404, "Article not found" if @article.nil?
+end
+
+get '/articles' do
+  "All articles"
+end
+
+get '/articles/:id' do
+  "Show article: #{@article[:title]}"
+end
+
+put '/articles/:id' do
+  "Update article: #{@article[:title]}"
+end
+
+delete '/articles/:id' do
+  "Delete article: #{@article[:title]}"
+end
