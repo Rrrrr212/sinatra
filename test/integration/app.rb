@@ -23,17 +23,6 @@ get '/stream' do
   end
 end
 
-get '/logs/stream' do
-  content_type 'text/event-stream'
-  stream(:keep_open) do |out|
-    until out.closed?
-      time = Time.now.strftime('%Y-%m-%d %H:%M:%S')
-      out << "data: {\"time\":\"#{time}\"}\n\n"
-      sleep 1
-    end
-  end
-end
-
 get '/mainonly' do
   object = Object.new
   begin

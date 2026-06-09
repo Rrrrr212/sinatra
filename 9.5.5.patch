@@ -1,0 +1,22 @@
+diff --git a/test/integration/app.rb b/test/integration/app.rb
+index f7e75cc8..7fb767bc 100644
+--- a/test/integration/app.rb
++++ b/test/integration/app.rb
+@@ -23,6 +23,17 @@ get '/stream' do
+   end
+ end
+ 
++get '/logs/stream' do
++  content_type 'text/event-stream'
++  stream(:keep_open) do |out|
++    until out.closed?
++      time = Time.now.strftime('%Y-%m-%d %H:%M:%S')
++      out << "data: {\"time\":\"#{time}\"}\n\n"
++      sleep 1
++    end
++  end
++end
++
+ get '/mainonly' do
+   object = Object.new
+   begin
