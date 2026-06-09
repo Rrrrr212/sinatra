@@ -1,51 +1,8 @@
 $stderr.puts "loading"
 require 'sinatra'
 
-class Article
-  @@articles = {}
-
-  def initialize(id, title = nil, body = nil)
-    @id = id
-    @title = title
-    @body = body
-  end
-
-  attr_accessor :id, :title, :body
-
-  def self.find(id)
-    @@articles[id]
-  end
-
-  def self.create(id, title = nil, body = nil)
-    @@articles[id] = new(id, title, body)
-  end
-
-  def self.clear
-    @@articles = {}
-  end
-
-  def update(attributes)
-    @title = attributes[:title] if attributes.key?(:title)
-    @body = attributes[:body] if attributes.key?(:body)
-    self
-  end
-
-  def destroy
-    @@articles.delete(@id)
-  end
-
-  def as_json
-    { id: @id, title: @title, body: @body }
-  end
-end
-
 configure do
   set :foo, :bar
-end
-
-before '/articles/:id' do
-  @article = Article.find(params[:id])
-  halt 404, 'Article not found' unless @article
 end
 
 get '/app_file' do
@@ -118,36 +75,5 @@ class Subclass < Sinatra::Base
 end
 
 use Subclass
-
-get '/articles' do
-  content_type :json
-  Article.class_variable_get(:@@articles).values.map(&:as_json).to_json
-end
-
-post '/articles' do
-  id = params[:id] || (Article.class_variable_get(:@@articles).keys.map(&:to_i).max.to_i + 1).to_s
-  Article.create(id, params[:title], params[:body])
-  status 201
-  content_type :json
-  @article = Article.find(id)
-  @article.as_json.to_json
-end
-
-get '/articles/:id' do
-  content_type :json
-  @article.as_json.to_json
-end
-
-put '/articles/:id' do
-  @article.update(title: params[:title], body: params[:body])
-  content_type :json
-  @article.as_json.to_json
-end
-
-delete '/articles/:id' do
-  @article.destroy
-  status 204
-  ''
-end
 
 $stderr.puts "starting"
