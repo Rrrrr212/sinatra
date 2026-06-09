@@ -1,0 +1,65 @@
+diff --git a/app.rb b/app.rb
+new file mode 100644
+index 00000000..dbaddf80
+--- /dev/null
++++ b/app.rb
+@@ -0,0 +1,19 @@
++require 'json'
++require 'sinatra'
++
++get '/hello/:name' do
++  "Hello #{params[:name]}!"
++end
++
++post '/data' do
++  JSON.parse(request.body.read)
++  status 201
++  ''
++rescue JSON::ParserError
++  halt 400, 'Bad Request'
++end
++
++not_found do
++  status 404
++  'Not found'
++end
+diff --git a/test/test_app.rb b/test/test_app.rb
+new file mode 100644
+index 00000000..18d002cd
+--- /dev/null
++++ b/test/test_app.rb
+@@ -0,0 +1,34 @@
++require_relative 'test_helper'
++require_relative '../app'
++
++class TestAppTest < Minitest::Test
++  def app
++    Sinatra::Application
++  end
++
++  it 'returns a personalized greeting for GET /hello/:name' do
++    get '/hello/world'
++
++    assert last_response.ok?
++    assert_include last_response.body, 'world'
++  end
++
++  it 'returns 201 for valid JSON on POST /data' do
++    post '/data', JSON.dump(name: 'world'), { 'CONTENT_TYPE' => 'application/json' }
++
++    assert_equal 201, last_response.status
++  end
++
++  it 'returns 400 for invalid JSON on POST /data' do
++    post '/data', '{"name":', { 'CONTENT_TYPE' => 'application/json' }
++
++    assert_equal 400, last_response.status
++  end
++
++  it 'returns the custom 404 page for unknown routes' do
++    get '/not-exist'
++
++    assert_equal 404, last_response.status
++    assert_include last_response.body, 'Not found'
++  end
++end
