@@ -5,24 +5,6 @@ configure do
   set :foo, :bar
 end
 
-enable :sessions
-
-helpers do
-  def authenticate!
-    unless session[:user_id]
-      halt 401, 'Unauthorized'
-    end
-  end
-end
-
-before '/protected/*' do
-  authenticate!
-end
-
-get '/protected/*' do
-  "Welcome, authenticated user!"
-end
-
 get '/app_file' do
   content_type :txt
   settings.app_file
