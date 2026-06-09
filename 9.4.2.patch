@@ -1,0 +1,22 @@
+require 'sinatra'
+
+before '/articles/:id' do
+  @article = Article.find(params[:id])
+  halt 404, 'Article not found' unless @article
+end
+
+get '/articles/:id' do
+  erb :article
+end
+
+put '/articles/:id' do
+  @article.title = params[:title]
+  @article.content = params[:content]
+  @article.save
+  redirect "/articles/#{@article.id}"
+end
+
+delete '/articles/:id' do
+  @article.destroy
+  redirect '/articles'
+end
