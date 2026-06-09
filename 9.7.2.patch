@@ -1,0 +1,74 @@
+diff --git a/admin_app.rb b/admin_app.rb
+new file mode 100644
+index 00000000..12b7bba8
+--- /dev/null
++++ b/admin_app.rb
+@@ -0,0 +1,7 @@
++require 'sinatra/base'
++
++class AdminApp < Sinatra::Base
++  get '/' do
++    'AdminApp home'
++  end
++end
+diff --git a/api_app.rb b/api_app.rb
+new file mode 100644
+index 00000000..cf694587
+--- /dev/null
++++ b/api_app.rb
+@@ -0,0 +1,9 @@
++require 'sinatra/base'
++require 'json'
++
++class ApiApp < Sinatra::Base
++  get '/' do
++    content_type :json
++    JSON.generate(app: 'ApiApp', status: 'ok')
++  end
++end
+diff --git a/config.ru b/config.ru
+new file mode 100644
+index 00000000..e638262c
+--- /dev/null
++++ b/config.ru
+@@ -0,0 +1,40 @@
++require 'bundler/setup'
++require 'fileutils'
++require 'rack'
++require_relative 'admin_app'
++require_relative 'api_app'
++
++log_directory = File.expand_path('log', __dir__)
++FileUtils.mkdir_p(log_directory)
++log_file = File.open(File.join(log_directory, 'requests.log'), 'a')
++log_file.sync = true
++
++class RequestStatusLogger
++  def initialize(app)
++    @app = app
++  end
++
++  def call(env)
++    status, headers, body = @app.call(env)
++    env[Rack::RACK_LOGGER]&.info("#{env['REQUEST_METHOD']} #{env['PATH_INFO']} #{status}")
++    [status, headers, body]
++  rescue StandardError
++    env[Rack::RACK_LOGGER]&.error("#{env['REQUEST_METHOD']} #{env['PATH_INFO']} 500")
++    raise
++  end
++end
++
++use Rack::Config do |env|
++  env[Rack::RACK_ERRORS] = log_file
++end
++
++use Rack::Logger
++use RequestStatusLogger
++
++map '/admin' do
++  run AdminApp
++end
++
++map '/api' do
++  run ApiApp
++end
