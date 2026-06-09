@@ -61,17 +61,6 @@ get '/streaming' do
   end
 end
 
-get '/logs/stream' do
-  content_type 'text/event-stream'
-  stream do |out|
-    loop do
-      break if out.closed?
-      out << "data: {\"time\":\"#{Time.now.strftime('%Y-%m-%d %H:%M:%S')}\"}\n\n"
-      sleep 1
-    end
-  end
-end
-
 class Subclass < Sinatra::Base
   set :out, nil
   get '/subclass/async' do

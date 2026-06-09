@@ -1,0 +1,22 @@
+diff --git a/test/integration/app.rb b/test/integration/app.rb
+index f7e75cc8..cd9710c1 100644
+--- a/test/integration/app.rb
++++ b/test/integration/app.rb
+@@ -61,6 +61,17 @@ get '/streaming' do
+   end
+ end
+ 
++get '/logs/stream' do
++  content_type 'text/event-stream'
++  stream do |out|
++    loop do
++      break if out.closed?
++      out << "data: {\"time\":\"#{Time.now.strftime('%Y-%m-%d %H:%M:%S')}\"}\n\n"
++      sleep 1
++    end
++  end
++end
++
+ class Subclass < Sinatra::Base
+   set :out, nil
+   get '/subclass/async' do
