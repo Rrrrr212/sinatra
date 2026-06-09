@@ -14,6 +14,21 @@ get '/ping' do
   'pong'
 end
 
+get '/logs' do
+  "logs"
+end
+
+get '/logs/stream' do
+  content_type 'text/event-stream'
+  stream(:keep_open) do |out|
+    until out.closed?
+      time = Time.now.strftime('%Y-%m-%d %H:%M:%S')
+      out << "data: {\"time\":\"#{time}\"}\n\n"
+      sleep 1
+    end
+  end
+end
+
 get '/stream' do
   stream do |out|
     sleep 0.1
