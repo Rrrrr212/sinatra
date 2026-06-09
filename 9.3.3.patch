@@ -1,0 +1,21 @@
+diff --git a/test/integration/app.rb b/test/integration/app.rb
+index f7e75cc8..6aeea763 100644
+--- a/test/integration/app.rb
++++ b/test/integration/app.rb
+@@ -1,6 +1,16 @@
+ $stderr.puts "loading"
+ require 'sinatra'
+ 
++helpers do
++  def authenticate!
++    halt 401, 'Unauthorized' unless session[:user_id]
++  end
++end
++
++before '/protected/*' do
++  authenticate!
++end
++
+ configure do
+   set :foo, :bar
+ end
