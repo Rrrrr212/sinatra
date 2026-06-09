@@ -1,0 +1,78 @@
+diff --git a/admin_app.rb b/admin_app.rb
+new file mode 100644
+index 00000000..e9799c75
+--- /dev/null
++++ b/admin_app.rb
+@@ -0,0 +1,13 @@
++# frozen_string_literal: true
++
++require 'sinatra/base'
++
++class AdminApp < Sinatra::Base
++  get '/' do
++    'Admin Dashboard'
++  end
++
++  get '/users' do
++    'Admin Users List'
++  end
++end
+diff --git a/api_app.rb b/api_app.rb
+new file mode 100644
+index 00000000..9099dc72
+--- /dev/null
++++ b/api_app.rb
+@@ -0,0 +1,13 @@
++# frozen_string_literal: true
++
++require 'sinatra/base'
++
++class ApiApp < Sinatra::Base
++  get '/' do
++    'API Root'
++  end
++
++  get '/status' do
++    'API Status OK'
++  end
++end
+diff --git a/config.ru b/config.ru
+new file mode 100644
+index 00000000..93e36b7d
+--- /dev/null
++++ b/config.ru
+@@ -0,0 +1,34 @@
++# frozen_string_literal: true
++
++require_relative 'admin_app'
++require_relative 'api_app'
++require 'rack/logger'
++require 'logger'
++
++Dir.mkdir('log') unless Dir.exist?('log')
++
++class RequestLogger
++  def initialize(app, log_file = 'log/requests.log')
++    @app = app
++    log = File.open(log_file, 'a')
++    log.sync = true
++    @logger = ::Logger.new(log)
++  end
++
++  def call(env)
++    status, headers, body = @app.call(env)
++    @logger.info("#{env['REQUEST_METHOD']} #{env['PATH_INFO']} #{status}")
++    [status, headers, body]
++  end
++end
++
++use Rack::Logger
++use RequestLogger
++
++map '/admin' do
++  run AdminApp
++end
++
++map '/api' do
++  run ApiApp
++end
