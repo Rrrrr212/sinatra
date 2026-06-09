@@ -1,8 +1,16 @@
 $stderr.puts "loading"
 require 'sinatra'
 
+enable :sessions
+
 configure do
   set :foo, :bar
+end
+
+helpers do
+  def authenticate!
+    halt 401, 'Unauthorized' unless session[:user_id]
+  end
 end
 
 get '/app_file' do
