@@ -1,0 +1,61 @@
+diff --git a/app.rb b/app.rb
+new file mode 100644
+index 00000000..336f6ba2
+--- /dev/null
++++ b/app.rb
+@@ -0,0 +1,19 @@
++require 'sinatra'
++require 'json'
++
++get '/hello/:name' do
++  "Hello #{params[:name]}!"
++end
++
++post '/data' do
++  begin
++    JSON.parse(request.body.read)
++    status 201
++  rescue JSON::ParserError
++    status 400
++  end
++end
++
++not_found do
++  "Not found"
++end
+diff --git a/test/test_app.rb b/test/test_app.rb
+new file mode 100644
+index 00000000..3208a4d3
+--- /dev/null
++++ b/test/test_app.rb
+@@ -0,0 +1,30 @@
++require_relative 'test_helper'
++require_relative '../app'
++
++class AppTest < Minitest::Test
++  def app
++    Sinatra::Application
++  end
++
++  def test_hello_name
++    get '/hello/world'
++    assert_status 200
++    assert_include last_response.body, "world"
++  end
++
++  def test_post_data_valid_json
++    post '/data', '{"key": "value"}', { "CONTENT_TYPE" => "application/json" }
++    assert_status 201
++  end
++
++  def test_post_data_invalid_json
++    post '/data', 'invalid json', { "CONTENT_TYPE" => "application/json" }
++    assert_status 400
++  end
++
++  def test_not_exist
++    get '/not-exist'
++    assert_status 404
++    assert_include last_response.body, "Not found"
++  end
++end
