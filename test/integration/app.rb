@@ -76,4 +76,46 @@ end
 
 use Subclass
 
+MAX_FILE_SIZE = 10 * 1024 * 1024
+
+post '/upload' do
+  unless params[:file] && params[:file][:tempfile] && params[:file][:filename]
+    halt 400, "No file provided"
+  end
+
+  file = params[:file]
+  tempfile = file[:tempfile]
+  filename = file[:filename]
+
+  tempfile.seek(0, IO::SEEK_END)
+  file_size = tempfile.tell
+  tempfile.rewind
+
+  if file_size > MAX_FILE_SIZE
+    halt 400, "File size exceeds 10MB limit"
+  end
+
+  upload_dir = File.join(__dir__, '..', '..', 'uploads')
+  FileUtils.mkdir_p(upload_dir) unless Dir.exist?(upload_dir)
+
+  destination = File.join(upload_dir, filename)
+  FileUtils.cp(tempfile.path, destination)
+
+  "File '#{filename}' uploaded successfully (#{file_size} bytes)"
+end
+
+get '/download/:filename' do
+  filename = params[:filename]
+  upload_dir = File.join(__dir__, '..', '..', 'uploads')
+  filepath = File.join(upload_dir, filename)
+
+  unless File.exist?(filepath)
+    halt 404, "File not found"
+  end
+
+  content_type :binary
+  attachment filename
+  send_file filepath
+end
+
 $stderr.puts "starting"
